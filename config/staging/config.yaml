@@ -1,0 +1,6 @@
+ServiceName: starter-kit
+BasePath: /
+ServerPort: 8080
+Env: staging
+LogLevel: warning
+LogFormat: ""
