@@ -23,7 +23,7 @@ func main() {
 
 	//Start Config Watcher if fields should be updated dynamically
 	if len(cfg.WatchFields) != 0 {
-		go cfg.StartWatch()
+		go cfg.StartWatch(15)
 	}
 
 	select {}

@@ -2,7 +2,6 @@ package config
 
 import (
 	"os"
-	"reflect"
 	"testing"
 
 	"github.com/spf13/pflag"
@@ -80,65 +79,38 @@ func TestNewConfig(t *testing.T) {
 }
 
 func TestConfig_RegisterWatchFields(t *testing.T) {
-	type fields struct {
-		AppConfig   *AppConfig
-		WatchFields map[string]UpdateFunc
-	}
-	type args struct {
-		watch map[string]UpdateFunc
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		args   args
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			c := &Config{
-				AppConfig:   tt.fields.AppConfig,
-				WatchFields: tt.fields.WatchFields,
-			}
-			c.RegisterWatchFields(tt.args.watch)
+
+	t.Run("add field to be watched", func(t *testing.T) {
+		c := &Config{
+			AppConfig:   &AppConfig{},
+			WatchFields: make(map[string]UpdateFunc),
+		}
+
+		c.RegisterWatchFields(map[string]UpdateFunc{
+			"ServerPort": func(config *AppConfig, field string, newConfig *AppConfig) { config.ServerPort = 8080 },
 		})
-	}
+
+		c.WatchFields["ServerPort"](c.AppConfig, "ServerPort", c.AppConfig)
+
+		assert.Equal(t, 8080, c.AppConfig.ServerPort)
+	})
+
 }
 
 func TestDefaultUpdater(t *testing.T) {
 	tests := []struct {
-		name string
-		want UpdateFunc
+		name        string
+		initialPort int
+		updatedPort int
 	}{
-		// TODO: Add test cases.
+		{"test updating server port", 8080, 9090},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := DefaultUpdater(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("DefaultUpdater() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestConfig_StartWatch(t *testing.T) {
-	type fields struct {
-		AppConfig   *AppConfig
-		WatchFields map[string]UpdateFunc
-	}
-	tests := []struct {
-		name   string
-		fields fields
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			c := &Config{
-				AppConfig:   tt.fields.AppConfig,
-				WatchFields: tt.fields.WatchFields,
-			}
-			c.StartWatch()
+			update := DefaultUpdater()
+			config := &AppConfig{ServerPort: tt.initialPort}
+			update(config, "ServerPort", &AppConfig{ServerPort: tt.updatedPort})
+			assert.Equal(t, tt.updatedPort, config.ServerPort)
 		})
 	}
 }

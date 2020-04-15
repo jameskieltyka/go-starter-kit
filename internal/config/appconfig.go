@@ -108,16 +108,17 @@ func DefaultUpdater() UpdateFunc {
 }
 
 //StartWatch Starts polling registered fields for changes in value
-func (c *Config) StartWatch() {
+func (c *Config) StartWatch(delay time.Duration) {
 	go func() {
 		for {
-			time.Sleep(time.Second * 15)
+			time.Sleep(time.Second * delay)
 			var tempConfig AppConfig
 
 			err := viper.Unmarshal(&tempConfig)
 			if err != nil {
 				//log error
-				fmt.Println(err)
+				zap.L().Warn(fmt.Sprintf("could not unmarshal new configuration %v", err))
+				continue
 			}
 
 			for field, updateFunc := range c.WatchFields {
