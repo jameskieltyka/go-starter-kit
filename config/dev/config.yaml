@@ -1,6 +1,5 @@
 ServiceName: starter-kit
-BasePath: /
+Version: v1
 ServerPort: 8080
 Env: dev
 LogLevel: info
-LogFormat: ""

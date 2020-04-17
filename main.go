@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/jkieltyka/go-starter-kit/internal"
 	"github.com/jkieltyka/go-starter-kit/internal/config"
 	"github.com/jkieltyka/go-starter-kit/pkg/logger"
 )
@@ -26,8 +27,7 @@ func main() {
 		go cfg.StartWatch(15)
 	}
 
-	select {}
-
-	//server := internal.Setup(cfg)
-	//server.Start("", cfg.ServerPort())
+	//Start the HTTP Server
+	internal.SetupHTTPServer(cfg.AppConfig).
+		Start(cfg.AppConfig.ServerPort)
 }
