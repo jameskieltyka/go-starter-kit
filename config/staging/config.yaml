@@ -1,5 +1,4 @@
 ServiceName: starter-kit
-Version: v1
 ServerPort: 8080
 Env: staging
 LogLevel: warning

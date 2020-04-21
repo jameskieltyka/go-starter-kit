@@ -1,48 +1,46 @@
 package internal
 
 import (
-	"encoding/json"
 	"fmt"
-	"net/http"
+	"strings"
 
+	grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
 	"github.com/jkieltyka/go-starter-kit/internal/config"
+	"github.com/jkieltyka/go-starter-kit/internal/version"
+	"github.com/jkieltyka/go-starter-kit/pkg/grpcserver"
 	"github.com/jkieltyka/go-starter-kit/pkg/httpserver"
-	"github.com/jkieltyka/go-starter-kit/pkg/middleware"
+	"github.com/jkieltyka/go-starter-kit/pkg/middleware/grpcstream"
+	"github.com/jkieltyka/go-starter-kit/pkg/middleware/grpcunary"
+	httpmiddleware "github.com/jkieltyka/go-starter-kit/pkg/middleware/http"
+	versioner "github.com/jkieltyka/go-starter-kit/proto"
+	"go.uber.org/zap"
 )
 
-func SetupHTTPServer(c *config.AppConfig) *httpserver.Server {
-	versionPath := fmt.Sprintf("/%v", c.Version)
-	server := httpserver.NewServer().
-		WithBasePath(versionPath).
-		WithMiddleware(middleware.ExampleMiddleware).
-		WithBaseRoutes(VersionRoute(c)).
-		WithRoutes(
-			VersionRoute(c),
-		)
+func SetupGRPCServer(c *config.AppConfig) *grpcserver.Server {
+	server := grpcserver.NewServer().
+		WithStreamMiddleware(
+			grpc_zap.StreamServerInterceptor(zap.L()),
+			grpcstream.ExampleInterceptor(),
+		).
+		WithUnaryMiddleware(
+			grpc_zap.UnaryServerInterceptor(zap.L()),
+			grpcunary.ExampleInterceptor(),
+		).
+		Configure()
+
+	versioner.RegisterVersionerServer(server.Server, version.NewVersionGRPCServer(c))
+
 	return server
 }
 
-func VersionRoute(c *config.AppConfig) httpserver.Route {
-	type Version struct {
-		Version string `json:"version,omitempty"`
-	}
-
-	return httpserver.Route{
-		Path:   "/version",
-		Method: http.MethodGet,
-		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-			w.Header().Set("Content-Type", "application/json")
-
-			data, err := json.Marshal(Version{
-				Version: c.Version,
-			})
-			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				return
-			}
-			w.WriteHeader(http.StatusOK)
-			_, _ = w.Write(data)
-		}),
-	}
+func SetupHTTPServer(c *config.AppConfig) *httpserver.Server {
+	versionPath := fmt.Sprintf("/%v", strings.Split(version.BuildVersion, ".")[0])
+	server := httpserver.NewServer().
+		WithBasePath(versionPath).
+		WithMiddleware(httpmiddleware.ExampleMiddleware).
+		WithBaseRoutes(version.VersionRoute()).
+		WithRoutes(
+			version.VersionRoute(),
+		)
+	return server
 }
