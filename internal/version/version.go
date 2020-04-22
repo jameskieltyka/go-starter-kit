@@ -8,7 +8,6 @@ import (
 	"github.com/jkieltyka/go-starter-kit/internal/config"
 	"github.com/jkieltyka/go-starter-kit/pkg/httpserver"
 	versioner "github.com/jkieltyka/go-starter-kit/proto"
-	"go.uber.org/zap"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
@@ -49,17 +48,13 @@ func VersionRoute() httpserver.Route {
 	}
 }
 
-type VersionGRPCServer struct {
-	VersionNumber string
-}
+type VersionGRPCServer struct{}
 
 func NewVersionGRPCServer(cfg *config.AppConfig) *VersionGRPCServer {
 	return &VersionGRPCServer{}
 }
 
 func (v *VersionGRPCServer) Version(ctx context.Context, empty *emptypb.Empty) (*versioner.VersionReply, error) {
-	zap.S().Infof("%v, %v, %v", BuildVersion, GitCommit, BuildVersion)
-	defer zap.S().Sync()
 	return &versioner.VersionReply{
 		Version:   BuildVersion,
 		Hash:      GitCommit,

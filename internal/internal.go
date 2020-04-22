@@ -28,6 +28,7 @@ func SetupGRPCServer(c *config.AppConfig) *grpcserver.Server {
 		).
 		Configure()
 
+	//Register endpoints
 	versioner.RegisterVersionerServer(server.Server, version.NewVersionGRPCServer(c))
 
 	return server
@@ -39,8 +40,7 @@ func SetupHTTPServer(c *config.AppConfig) *httpserver.Server {
 		WithBasePath(versionPath).
 		WithMiddleware(httpmiddleware.ExampleMiddleware).
 		WithBaseRoutes(version.VersionRoute()).
-		WithRoutes(
-			version.VersionRoute(),
-		)
+		//register endpoints
+		WithRoutes()
 	return server
 }

@@ -1,4 +1,5 @@
 ServiceName: starter-kit
 ServerPort: 8080
+ProfilerPort: 6060
 Env: dev
 LogLevel: info

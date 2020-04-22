@@ -21,18 +21,18 @@ type Route struct {
 
 type Server struct {
 	http.Server
-	Router   *mux.Router
-	BasePath string
-	Done     chan bool
-	Stop     chan os.Signal
+	Router     *mux.Router
+	BasePath   string
+	Done       chan bool
+	StopSignal chan os.Signal
 }
 
 func NewServer() *Server {
 	return &Server{
-		Router:   mux.NewRouter(),
-		BasePath: "/",
-		Done:     make(chan bool),
-		Stop:     make(chan os.Signal),
+		Router:     mux.NewRouter(),
+		BasePath:   "/",
+		Done:       make(chan bool),
+		StopSignal: make(chan os.Signal),
 	}
 }
 
@@ -88,11 +88,11 @@ func (s *Server) LogRoutes() {
 }
 
 func (s *Server) WaitShutdown() {
-	signal.Notify(s.Stop, syscall.SIGINT, syscall.SIGTERM)
+	signal.Notify(s.StopSignal, syscall.SIGINT, syscall.SIGTERM)
 	select {
 	case <-s.Done:
 		zap.S().Info("server stopping due to finish request")
-	case sig := <-s.Stop:
+	case sig := <-s.StopSignal:
 		zap.S().Infof("server stopped due to signal %v", sig)
 	}
 
