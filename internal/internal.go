@@ -12,7 +12,6 @@ import (
 	"github.com/jkieltyka/go-starter-kit/pkg/middleware/grpcstream"
 	"github.com/jkieltyka/go-starter-kit/pkg/middleware/grpcunary"
 	httpmiddleware "github.com/jkieltyka/go-starter-kit/pkg/middleware/http"
-	versioner "github.com/jkieltyka/go-starter-kit/proto"
 	"go.uber.org/zap"
 )
 
@@ -29,7 +28,7 @@ func SetupGRPCServer(c *config.AppConfig) *grpcserver.Server {
 		Configure()
 
 	//Register endpoints
-	versioner.RegisterVersionerServer(server.Server, version.NewVersionGRPCServer(c))
+	version.RegisterVersionerServer(server.Server, version.NewVersionGRPCServer(c))
 
 	return server
 }

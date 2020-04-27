@@ -2,8 +2,8 @@ package httpserver
 
 import (
 	"net/http"
+	"net/http/httptest"
 	"os"
-	"reflect"
 	"testing"
 
 	"github.com/gorilla/mux"
@@ -28,126 +28,92 @@ func TestNewServer(t *testing.T) {
 }
 
 func TestServer_WithBaseRoutes(t *testing.T) {
-	type fields struct {
-		Server     http.Server
-		Router     *mux.Router
-		BasePath   string
-		Done       chan bool
-		StopSignal chan os.Signal
-	}
-	type args struct {
-		routes []Route
-	}
+
 	tests := []struct {
-		name   string
-		fields fields
-		args   args
-		want   *Server
-	}{}
+		name  string
+		route Route
+	}{
+		{"add a version GET route", Route{"/version", "GET", func(res http.ResponseWriter, req *http.Request) {
+			_, _ = res.Write([]byte("ok"))
+		}}},
+		{"add a version POST route", Route{"/version", "POST", func(res http.ResponseWriter, req *http.Request) {
+			_, _ = res.Write([]byte("ok"))
+		}}},
+	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &Server{
-				Server:     tt.fields.Server,
-				Router:     tt.fields.Router,
-				BasePath:   tt.fields.BasePath,
-				Done:       tt.fields.Done,
-				StopSignal: tt.fields.StopSignal,
+				Router:     mux.NewRouter(),
+				BasePath:   "/v1",
+				Done:       make(chan bool),
+				StopSignal: make(chan os.Signal),
 			}
-			if got := s.WithBaseRoutes(tt.args.routes...); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Server.WithBaseRoutes() = %v, want %v", got, tt.want)
-			}
+			s = s.WithBaseRoutes(tt.route)
+			route := s.Router.Get(tt.route.Path + tt.route.Method)
+
+			result := httptest.NewRecorder()
+			route.GetHandler().ServeHTTP(result, &http.Request{})
+
+			assert.Equal(t, result.Body.Bytes(), []byte("ok"))
+			methods, _ := route.GetMethods()
+			assert.Equal(t, methods, []string{tt.route.Method})
 		})
 	}
 }
 
 func TestServer_WithRoutes(t *testing.T) {
-	type fields struct {
-		Server     http.Server
-		Router     *mux.Router
-		BasePath   string
-		Done       chan bool
-		StopSignal chan os.Signal
-	}
-	type args struct {
-		routes []Route
-	}
 	tests := []struct {
-		name   string
-		fields fields
-		args   args
-		want   *Server
+		name  string
+		route Route
 	}{
-		// TODO: Add test cases.
+		{"add a version GET route", Route{"/version", "GET", func(res http.ResponseWriter, req *http.Request) {
+			_, _ = res.Write([]byte("ok"))
+		}}},
+		{"add a version POST route", Route{"/version", "POST", func(res http.ResponseWriter, req *http.Request) {
+			_, _ = res.Write([]byte("ok"))
+		}}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &Server{
-				Server:     tt.fields.Server,
-				Router:     tt.fields.Router,
-				BasePath:   tt.fields.BasePath,
-				Done:       tt.fields.Done,
-				StopSignal: tt.fields.StopSignal,
+				Router:     mux.NewRouter(),
+				BasePath:   "/v1",
+				Done:       make(chan bool),
+				StopSignal: make(chan os.Signal),
 			}
-			// s.Router.GetRoute()
-			if got := s.WithRoutes(tt.args.routes...); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Server.WithRoutes() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
+			s = s.WithRoutes(tt.route)
+			route := s.Router.Get(s.BasePath + tt.route.Path + tt.route.Method)
 
-func TestServer_LogRoutes(t *testing.T) {
-	type fields struct {
-		Server     http.Server
-		Router     *mux.Router
-		BasePath   string
-		Done       chan bool
-		StopSignal chan os.Signal
-	}
-	tests := []struct {
-		name   string
-		fields fields
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := &Server{
-				Server:     tt.fields.Server,
-				Router:     tt.fields.Router,
-				BasePath:   tt.fields.BasePath,
-				Done:       tt.fields.Done,
-				StopSignal: tt.fields.StopSignal,
-			}
-			s.LogRoutes()
+			result := httptest.NewRecorder()
+			route.GetHandler().ServeHTTP(result, &http.Request{})
+
+			assert.Equal(t, result.Body.Bytes(), []byte("ok"))
+			methods, _ := route.GetMethods()
+			assert.Equal(t, methods, []string{tt.route.Method})
 		})
 	}
 }
 
 func TestServer_WaitShutdown(t *testing.T) {
-	type fields struct {
-		Server     http.Server
-		Router     *mux.Router
-		BasePath   string
-		Done       chan bool
-		StopSignal chan os.Signal
-	}
-	tests := []struct {
-		name   string
-		fields fields
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := &Server{
-				Server:     tt.fields.Server,
-				Router:     tt.fields.Router,
-				BasePath:   tt.fields.BasePath,
-				Done:       tt.fields.Done,
-				StopSignal: tt.fields.StopSignal,
-			}
-			s.WaitShutdown()
-		})
-	}
+	t.Run("trigger stop from done signal", func(t *testing.T) {
+		s := &Server{
+			Router:     mux.NewRouter(),
+			Done:       make(chan bool, 1),
+			StopSignal: make(chan os.Signal, 1),
+		}
+		go s.Start(8080)
+		s.Done <- true
+		s.WaitShutdown()
+	})
+
+	t.Run("trigger stop for os signal", func(t *testing.T) {
+		s := &Server{
+			Router:     mux.NewRouter(),
+			Done:       make(chan bool, 1),
+			StopSignal: make(chan os.Signal, 1),
+		}
+		s.StopSignal <- os.Interrupt
+		go s.Start(8080)
+		s.WaitShutdown()
+	})
 }

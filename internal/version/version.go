@@ -7,7 +7,6 @@ import (
 
 	"github.com/jkieltyka/go-starter-kit/internal/config"
 	"github.com/jkieltyka/go-starter-kit/pkg/httpserver"
-	versioner "github.com/jkieltyka/go-starter-kit/proto"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
@@ -54,8 +53,8 @@ func NewVersionGRPCServer(cfg *config.AppConfig) *VersionGRPCServer {
 	return &VersionGRPCServer{}
 }
 
-func (v *VersionGRPCServer) Version(ctx context.Context, empty *emptypb.Empty) (*versioner.VersionReply, error) {
-	return &versioner.VersionReply{
+func (v *VersionGRPCServer) Version(ctx context.Context, empty *emptypb.Empty) (*VersionReply, error) {
+	return &VersionReply{
 		Version:   BuildVersion,
 		Hash:      GitCommit,
 		Buildtime: BuildTime,

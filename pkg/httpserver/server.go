@@ -51,7 +51,7 @@ func (s *Server) WithMiddleware(m ...mux.MiddlewareFunc) *Server {
 func (s *Server) WithBaseRoutes(routes ...Route) *Server {
 	sub := s.Router.PathPrefix("/").Subrouter()
 	for _, route := range routes {
-		sub.HandleFunc(route.Path, route.Handler).Methods(route.Method)
+		sub.HandleFunc(route.Path, route.Handler).Methods(route.Method).Name(fmt.Sprintf("%s%s", route.Path, route.Method))
 	}
 
 	return s
@@ -60,7 +60,7 @@ func (s *Server) WithBaseRoutes(routes ...Route) *Server {
 func (s *Server) WithRoutes(routes ...Route) *Server {
 	sub := s.Router.PathPrefix(s.BasePath).Subrouter()
 	for _, route := range routes {
-		sub.HandleFunc(route.Path, route.Handler).Methods(route.Method)
+		sub.HandleFunc(route.Path, route.Handler).Methods(route.Method).Name(fmt.Sprintf("%s%s%s", s.BasePath, route.Path, route.Method))
 	}
 
 	return s
