@@ -1,0 +1,18 @@
+syntax = "proto3";
+package version;
+
+import "google/protobuf/empty.proto";
+
+option go_package = ".;version";
+
+service Versioner {
+  // Sends the version info
+  rpc Version(google.protobuf.Empty) returns (VersionReply) {}
+}
+
+// The response message containing the version info
+message VersionReply {
+  string version = 1;
+  string hash = 2;
+  string buildtime = 3;
+}

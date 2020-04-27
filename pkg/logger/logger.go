@@ -3,15 +3,9 @@ package logger
 import (
 	"encoding/json"
 	"fmt"
-	"sync"
 
 	"github.com/jkieltyka/go-starter-kit/internal/config"
 	"go.uber.org/zap"
-)
-
-var (
-	Logger zap.Logger
-	once   sync.Once
 )
 
 func init() {

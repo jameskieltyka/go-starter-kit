@@ -2,18 +2,26 @@ package main
 
 import (
 	"fmt"
-	"os"
 
+	"github.com/jkieltyka/go-starter-kit/internal"
 	"github.com/jkieltyka/go-starter-kit/internal/config"
 	"github.com/jkieltyka/go-starter-kit/pkg/logger"
+	"go.uber.org/zap"
+
+	"net/http"
+	_ "net/http/pprof"
 )
 
-func init() {
-	fmt.Println(os.Args[0])
-}
-
 func main() {
+
+	//start the profiler
+
 	cfg := config.NewConfig()
+
+	go func() {
+		zap.S().Info(http.ListenAndServe(fmt.Sprintf(":%d", cfg.AppConfig.ProfilerPort), nil))
+	}()
+
 	cfg.RegisterWatchFields(map[string]config.UpdateFunc{
 		"ServerPort": config.DefaultUpdater(),
 	})
@@ -26,8 +34,10 @@ func main() {
 		go cfg.StartWatch(15)
 	}
 
-	select {}
+	//Start the HTTP Server
+	// internal.SetupHTTPServer(cfg.AppConfig).
+	// Start(cfg.AppConfig.ServerPort)
 
-	//server := internal.Setup(cfg)
-	//server.Start("", cfg.ServerPort())
+	//Start the GRPC server
+	internal.SetupGRPCServer(cfg.AppConfig).Start(cfg.AppConfig.ServerPort)
 }
