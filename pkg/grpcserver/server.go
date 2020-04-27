@@ -22,10 +22,8 @@ type Server struct {
 
 func NewServer() *Server {
 	return &Server{
-		Done:             make(chan bool),
-		StopSignal:       make(chan os.Signal),
-		StreamMiddleware: make([]grpc.StreamServerInterceptor, 0),
-		UnaryMiddleware:  make([]grpc.UnaryServerInterceptor, 0),
+		Done:       make(chan bool, 1),
+		StopSignal: make(chan os.Signal, 1),
 	}
 }
 
@@ -56,8 +54,8 @@ func (s *Server) WaitShutdown() {
 		zap.S().Infof("server stopped due to signal %v", sig)
 	}
 
-	//give the server 10 seconds to finish any outstanding requests
-	timer := time.NewTimer(10 * time.Second)
+	//give the server 2 seconds to finish any outstanding requests
+	timer := time.NewTimer(2 * time.Second)
 
 	finished := make(chan bool)
 	go func() {
