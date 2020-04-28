@@ -35,9 +35,9 @@ func main() {
 	}
 
 	//Start the HTTP Server
-	// internal.SetupHTTPServer(cfg.AppConfig).
-	// Start(cfg.AppConfig.ServerPort)
+	internal.SetupHTTPServer(cfg.AppConfig).
+		Start(cfg.AppConfig.ServerPort)
 
 	//Start the GRPC server
-	internal.SetupGRPCServer(cfg.AppConfig).Start(cfg.AppConfig.ServerPort)
+	//internal.SetupGRPCServer(cfg.AppConfig).Start(cfg.AppConfig.ServerPort)
 }
